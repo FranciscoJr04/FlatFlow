@@ -284,7 +284,7 @@ app.delete('/deleteBillCard', (req, res) => {
         DELETE FROM RegistroCuentas 
         WHERE compra = ? AND PisoCompartido_idPisoCompartido = ?
     `;
-    db.query(query, [compra, PisoCompartido_idPisoCompartido], (err, results) => {
+    connection.query(query, [compra, PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao deletar conta:', err);
             return res.status(500).json({ message: 'Erro no servidor ao tentar deletar a conta.' });
