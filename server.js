@@ -268,21 +268,23 @@ app.post('/createBillCard', (req, res) => {
 });
 
 app.get('/getBillCard', (req, res) => {
-    const { PisoCompartido_idPisoCompartido } = req.query;  
+    const { PisoCompartido_idPisoCompartido } = req.query; // Obtém o PisoCompartido_idPisoCompartido da query string
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
-    const query = 'SELECT valor, diaVencimiento, compra FROM RegistroCuentas WHERE PisoCompartido_idPisoCompartido = ?';
+    const query = 'SELECT bill_info FROM RegistroCuentas WHERE PisoCompartido_idPisoCompartido = ?';
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
-            return res.status(500).json({ success: false, message: 'Erro ao buscar faturas.' });
+            console.error('Erro ao obter faturas:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao obter faturas.' });
         }
         if (results.length === 0) {
-            return res.status(404).json({ success: false, message: 'Nenhuma fatura encontrada.' });
+            return res.status(404).json({ success: false, message: 'Nenhuma fatura encontrada para o Piso Compartido.' });
         }
-        res.json({
-            results
-        });
+        const bills = results.map(item => ({
+            bill_info: item.bill_info
+        }));
+        res.status(200).json(bills);
     });
 });
 
@@ -333,15 +335,17 @@ app.get('/getCleaningCard', (req, res) => {
             return res.status(404).json({ success: false, message: 'Nenhum calendário encontrado para o Piso Compartido.' });
         }
 
-        // Retorna os quehaceres e diaVencimiento encontrados
+        // Retorna os quehaceres e diaVencimiento diretamente
         const calendario = results.map(item => ({
             quehacer: item.quehacer,
             diaVencimiento: item.diaVencimiento
         }));
 
-        res.status(200).json({calendario});
+        // Retorna o array de quehaceres diretamente
+        res.status(200).json(calendario);
     });
 });
+
 
 // Rota para criar um novo "calendario"
 app.post('/createCleaningCard', (req, res) => {
