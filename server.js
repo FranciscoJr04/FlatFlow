@@ -269,24 +269,37 @@ app.post('/createBillCard', (req, res) => {
 
 app.get('/getBillCard', (req, res) => {
     const { PisoCompartido_idPisoCompartido } = req.query; // Obtém o PisoCompartido_idPisoCompartido da query string
+
+    // Verifica se o PisoCompartido_idPisoCompartido foi fornecido
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
+
+    // Consulta os valores, diaVencimiento, e compra associados ao PisoCompartido_idPisoCompartido
     const query = 'SELECT valor, diaVencimiento, compra FROM RegistroCuentas WHERE PisoCompartido_idPisoCompartido = ?';
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao obter faturas:', err);
             return res.status(500).json({ success: false, message: 'Erro ao obter faturas.' });
         }
+
+        // Verifica se existem registros para o PisoCompartido_idPisoCompartido fornecido
         if (results.length === 0) {
             return res.status(404).json({ success: false, message: 'Nenhuma fatura encontrada para o Piso Compartido.' });
         }
+
+        // Mapeia os resultados para retornar os campos desejados
         const bills = results.map(item => ({
-            bill_info: item.bill_info
+            valor: item.valor,
+            diaVencimiento: item.diaVencimiento,
+            compra: item.compra
         }));
+
+        // Retorna a resposta com as faturas
         res.status(200).json(bills);
     });
 });
+
 
 app.delete('/deleteBillCard', (req, res) => {
     const { compra, PisoCompartido_idPisoCompartido } = req.body;
