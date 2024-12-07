@@ -220,6 +220,39 @@ app.post('/createBulletinCard', (req, res) => {
     });
 });
 
+app.delete('/deleteBulletinCard', (req, res) => {
+    const { informaciones, PisoCompartido_idPisoCompartido } = req.body;
+    if (!informaciones || !PisoCompartido_idPisoCompartido) {
+        return res.status(400).json({
+            success: false,
+            message: 'Os campos informaciones e PisoCompartido_idPisoCompartido são obrigatórios.'
+        });
+    }
+    const query = `
+        DELETE FROM MuroAnuncios
+        WHERE informaciones = ? AND PisoCompartido_idPisoCompartido = ?
+    `;
+    connection.query(query, [informaciones, PisoCompartido_idPisoCompartido], (err, results) => {
+        if (err) {
+            console.error('Erro ao deletar o anúncio:', err);
+            return res.status(500).json({
+                success: false,
+                message: 'Erro no servidor ao tentar deletar o anúncio.'
+            });
+        }
+        if (results.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Nenhum anúncio encontrado para os parâmetros fornecidos.'
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: 'Anúncio deletado com sucesso.'
+        });
+    });
+});
+
 
 app.post('/createBillCard', (req, res) => {
     const { valor, diaVencimiento, compra, PisoCompartido_idPisoCompartido } = req.body;
