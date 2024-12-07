@@ -50,14 +50,15 @@ app.post('/criar_usuario', (req, res) => {
     const PisoCompartido_idPisoCompartido = 1; // Valor padrão
     const Rol_idRol = 2; // Valor padrão
 
-    // Obtemos a quantidade de usuários para definir o próximo id
-    connection.query('SELECT COUNT(*) AS count FROM Usuario', (err, results) => {
+    // Obtemos o último idUsuarios para definir o próximo id
+    connection.query('SELECT MAX(idUsuarios) AS maxId FROM Usuario', (err, results) => {
         if (err) {
-            console.error('Erro ao contar usuários:', err);
-            return res.status(500).json({ error: 'Erro ao contar usuários' });
+            console.error('Erro ao buscar o último idUsuarios:', err);
+            return res.status(500).json({ error: 'Erro ao buscar o último idUsuarios' });
         }
 
-        const newId = results[0].count + 1;
+        // Definindo o novo idUsuarios
+        const newId = results[0].maxId ? results[0].maxId + 1 : 1; // Caso não haja usuários, começa com id 1
 
         // Inserir o novo usuário no banco de dados
         const query = 'INSERT INTO Usuario (idUsuarios, nombre, email, contraseña, PisoCompartido_idPisoCompartido, Rol_idRol) VALUES (?, ?, ?, ?, ?, ?)';
@@ -72,6 +73,7 @@ app.post('/criar_usuario', (req, res) => {
         });
     });
 });
+
 
 
 
@@ -424,6 +426,36 @@ app.post('/create_calendario', (req, res) => {
     });
 });
 
+// Rota para deletar um evento de calendário com base no quehacer e PisoCompartido_idPisoCompartido
+app.delete('/delete_calendario', (req, res) => {
+    const { quehacer, PisoCompartido_idPisoCompartido } = req.body;  // Espera os parâmetros no corpo da requisição
+
+    // Verificar se o quehacer e PisoCompartido_idPisoCompartido foram fornecidos
+    if (!quehacer || !PisoCompartido_idPisoCompartido) {
+        return res.status(400).json({ message: 'quehacer e PisoCompartido_idPisoCompartido são obrigatórios.' });
+    }
+
+    // Query para deletar o evento de calendário com base no quehacer e PisoCompartido_idPisoCompartido
+    const query = 'DELETE FROM Calendario WHERE quehacer = ? AND PisoCompartido_idPisoCompartido = ?';
+
+    connection.query(query, [quehacer, PisoCompartido_idPisoCompartido], (err, results) => {
+        if (err) {
+            console.error('Erro ao deletar evento de calendário:', err);
+            return res.status(500).json({ message: 'Erro ao tentar deletar evento de calendário.' });
+        }
+
+        // Verificar se algum evento foi deletado
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ message: 'Evento de calendário não encontrado.' });
+        }
+
+        // Retornar sucesso
+        res.status(200).json({
+            success: true,
+            message: 'Evento de calendário deletado com sucesso.'
+        });
+    });
+});
 
 
 app.listen(port, () => {
