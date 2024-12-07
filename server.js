@@ -92,7 +92,7 @@ app.post('/login_usuario', (req, res) => {
 
             // Comparar a senha fornecida com a senha armazenada
             if (user.contraseña === contraseña) {
-                return res.status(200).json({success: true, idUsuarios: user.idUsuarios, idRepublica: user.PisoCompartido_idPisoCompartido, message: 'Login bem-sucedido'});
+                return res.status(200).json({success: true, idUsuarios: user.idUsuarios, PisoCompartido_idPisoCompartido: user.PisoCompartido_idPisoCompartido, message: 'Login bem-sucedido'});
             } else {
                 return res.status(400).send('Senha incorreta');
             }
