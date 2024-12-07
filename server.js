@@ -190,7 +190,7 @@ app.get('/getBulletinCard', (req, res) => {
         if (err) {
             return res.status(500).json({ success: false, message: 'Erro ao consultar anúncios.' });
         }
-        res.json({ success: true, anuncios: results });
+        res.json({results});
     });
 });
 
@@ -264,7 +264,7 @@ app.get('/getBillCard', (req, res) => {
             return res.status(404).json({ success: false, message: 'Nenhuma fatura encontrada.' });
         }
         res.json({
-            lista_anuncios: results
+            results
         });
     });
 });
@@ -322,9 +322,7 @@ app.get('/getCleaningCard', (req, res) => {
             diaVencimiento: item.diaVencimiento
         }));
 
-        res.status(200).json({
-            calendario: calendario
-        });
+        res.status(200).json({calendario});
     });
 });
 
