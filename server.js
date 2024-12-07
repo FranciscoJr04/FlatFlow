@@ -189,7 +189,7 @@ app.get('/getBulletinCard', (req, res) => {
     }
 
     // Consulta os dados do boletim
-    const query = 'SELECT informaciones FROM BulletinCard WHERE PisoCompartido_idPisoCompartido = ?';
+    const query = 'SELECT informaciones FROM MuroAnuncios WHERE PisoCompartido_idPisoCompartido = ?';
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao obter boletins:', err);
