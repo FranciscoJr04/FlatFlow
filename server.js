@@ -8,20 +8,23 @@ const bcrypt = require('bcryptjs'); // Pacote para hashing de senhas (caso queir
 app.use(express.json());
 
 // Conectar ao banco de dados MySQL
+const mysql = require('mysql2');
 const connection = mysql.createConnection({
-  host: 'skibidi.mysql.database.azure.com',
-  user: 'daniel',
-  password: 'F14tomcat',
-  database: 'skibidi'
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
 });
 
 connection.connect((err) => {
   if (err) {
-    console.error('Erro ao conectar ao banco de dados: ', err);
+    console.error('Erro ao conectar com o banco de dados:', err.stack);
     return;
   }
-  console.log('Conectado ao banco de dados MySQL');
+  console.log('Conectado ao banco de dados');
 });
+
+
 app.get('/usuarios', (req, res) => {
     connection.query('SELECT * FROM Usuario', (err, results) => {
         if (err) {
