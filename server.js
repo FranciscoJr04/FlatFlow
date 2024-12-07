@@ -181,7 +181,7 @@ app.post('/entrar_republica', (req, res) => {
 });
 
 app.get('/getBulletinCard', (req, res) => {
-    const { PisoCompartido_idPisoCompartido } = req.query;
+    const { PisoCompartido_idPisoCompartido } = req.body;
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
@@ -251,7 +251,7 @@ app.post('/createBillCard', (req, res) => {
 });
 
 app.get('/getBillCard', (req, res) => {
-    const { PisoCompartido_idPisoCompartido } = req.query;  
+    const { PisoCompartido_idPisoCompartido } = req.body;  
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
@@ -296,7 +296,7 @@ app.delete('/deleteBillCard', (req, res) => {
 
 // Rota para obter o calendário (quehaceres) de um Piso Compartido específico
 app.get('/getCleaningCard', (req, res) => {
-    const { PisoCompartido_idPisoCompartido } = req.query; // Obtém o PisoCompartido_idPisoCompartido da query string
+    const { PisoCompartido_idPisoCompartido } = req.body; // Obtém o PisoCompartido_idPisoCompartido da query string
 
     // Verifica se o PisoCompartido_idPisoCompartido foi fornecido
     if (!PisoCompartido_idPisoCompartido) {
