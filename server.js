@@ -76,8 +76,27 @@ app.post('/login_usuario', (req, res) => {
         if (results.length > 0) {
             const user = results[0];
             if (user.contraseña === contraseña) {
-                const query_codigo = 'SELECT codigo FROM PisoCompartido WHERE PisoCompartido_idPisoCompartido = user.PisoCompartido_idPisoCompartido';
-                return res.status(200).json({success: true, idUsuarios: user.idUsuarios, PisoCompartido_idPisoCompartido: user.PisoCompartido_idPisoCompartido, codigo: query_codigo , message: 'Login bem-sucedido'});
+                // Consulta para obter o código da república usando o PisoCompartido_idPisoCompartido
+                const queryCodigoRepublica = 'SELECT codigo FROM PisoCompartido WHERE idPisoCompartido = ?';
+                connection.query(queryCodigoRepublica, [user.PisoCompartido_idPisoCompartido], (err, resultsCodigo) => {
+                    if (err) {
+                        return res.status(500).send('Erro ao obter código da república');
+                    }
+
+                    if (resultsCodigo.length > 0) {
+                        const codigoRepublica = resultsCodigo[0].codigo;
+
+                        return res.status(200).json({
+                            success: true,
+                            idUsuarios: user.idUsuarios,
+                            PisoCompartido_idPisoCompartido: user.PisoCompartido_idPisoCompartido,
+                            codigo: codigoRepublica,  // Envia o código da república
+                            message: 'Login bem-sucedido'
+                        });
+                    } else {
+                        return res.status(400).send('República não encontrada');
+                    }
+                });
             } else {
                 return res.status(400).send('Senha incorreta');
             }
@@ -86,6 +105,7 @@ app.post('/login_usuario', (req, res) => {
         }
     });
 });
+
 
 app.post('/criar_republica', (req, res) => {
     const { codigo, idUsuarios } = req.body;
