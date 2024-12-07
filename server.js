@@ -92,7 +92,7 @@ app.post('/login_usuario', (req, res) => {
 
             // Comparar a senha fornecida com a senha armazenada
             if (user.contraseña === contraseña) {
-                return res.status(200).json({success: true, idUsuarios: user.idUsuarios, PisoCompartido_idPisoCompartido: user.PisoCompartido_idPisoCompartido, message: 'Login bem-sucedido'});
+                return res.status(200).json({success: true, idUsuarios: user.idUsuarios, idRepublica: user.PisoCompartido_idPisoCompartido, message: 'Login bem-sucedido'});
             } else {
                 return res.status(400).send('Senha incorreta');
             }
@@ -325,7 +325,7 @@ app.get('/get_bill', (req, res) => {
     });
 });
 
-app.delete('/delete_bill', (req, res) => {
+app.delete('/deleteBillCard', (req, res) => {
     const { compra, PisoCompartido_idPisoCompartido } = req.body;
 
     if (!compra || !PisoCompartido_idPisoCompartido) {
@@ -354,7 +354,7 @@ app.delete('/delete_bill', (req, res) => {
 
 
 // Rota para obter o calendário (quehaceres) de um Piso Compartido específico
-app.get('/get_calendario', (req, res) => {
+app.get('/getCleaningCard', (req, res) => {
     const { PisoCompartido_idPisoCompartido } = req.body; // Obtém o PisoCompartido_idPisoCompartido da query string
 
     // Verifica se o PisoCompartido_idPisoCompartido foi fornecido
@@ -388,7 +388,7 @@ app.get('/get_calendario', (req, res) => {
 });
 
 // Rota para criar um novo "calendario"
-app.post('/create_calendario', (req, res) => {
+app.post('/createCleaningCard', (req, res) => {
     const { quehacer, diaVencimiento, Usuario_idUsuarios, PisoCompartido_idPisoCompartido } = req.body;
 
     // Verifica se todos os campos necessários foram fornecidos
@@ -427,7 +427,7 @@ app.post('/create_calendario', (req, res) => {
 });
 
 // Rota para deletar um evento de calendário com base no quehacer e PisoCompartido_idPisoCompartido
-app.delete('/delete_calendario', (req, res) => {
+app.delete('/deleteCleaningCard', (req, res) => {
     const { quehacer, PisoCompartido_idPisoCompartido } = req.body;  // Espera os parâmetros no corpo da requisição
 
     // Verificar se o quehacer e PisoCompartido_idPisoCompartido foram fornecidos
