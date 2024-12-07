@@ -2,11 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const app = express();
 const port = process.env.PORT || 3000;
-
-// Middleware para parsing do JSON
 app.use(express.json());
-
-// Conectar ao banco de dados MySQL
 const connection = mysql.createConnection({
   host: 'skibidi.mysql.database.azure.com',
   user: 'daniel',
@@ -27,8 +23,6 @@ app.get('/usuarios', (req, res) => {
             console.error('Erro ao obter usuários:', err);
             return res.status(500).json({ error: 'Erro ao obter usuários' });
         }
-
-        // Envolvendo a resposta em um objeto JSON estruturado
         res.json({
             totalUsuarios: results.length,
             usuarios: results
@@ -42,15 +36,14 @@ app.post('/criar_usuario', (req, res) => {
     if (!nombre || !email || !contraseña) {
         return res.status(400).json({ error: 'Nome, email e senha são obrigatórios.' });
     }
-
-    const PisoCompartido_idPisoCompartido = 1; // Valor padrão
-    const Rol_idRol = 2; // Valor padrão
+    const PisoCompartido_idPisoCompartido = 1; 
+    const Rol_idRol = 2; 
     connection.query('SELECT MAX(idUsuarios) AS maxId FROM Usuario', (err, results) => {
         if (err) {
             console.error('Erro ao buscar o último idUsuarios:', err);
             return res.status(500).json({ error: 'Erro ao buscar o último idUsuarios' });
         }
-        const newId = results[0].maxId ? results[0].maxId + 1 : 1; // Caso não haja usuários, começa com id 1
+        const newId = results[0].maxId ? results[0].maxId + 1 : 1; 
         const query = 'INSERT INTO Usuario (idUsuarios, nombre, email, contraseña, PisoCompartido_idPisoCompartido, Rol_idRol) VALUES (?, ?, ?, ?, ?, ?)';
         connection.query(query, [newId, nombre, email, contraseña, PisoCompartido_idPisoCompartido, Rol_idRol], (err, result) => {
             if (err) {
@@ -61,9 +54,6 @@ app.post('/criar_usuario', (req, res) => {
         });
     });
 });
-
-
-
 
 app.post('/login_usuario', (req, res) => {
     const { email, contraseña } = req.body;
@@ -76,7 +66,6 @@ app.post('/login_usuario', (req, res) => {
         if (results.length > 0) {
             const user = results[0];
             if (user.contraseña === contraseña) {
-                // Consulta para obter o código da república usando o PisoCompartido_idPisoCompartido
                 const queryCodigoRepublica = 'SELECT codigo FROM PisoCompartido WHERE idPisoCompartido = ?';
                 connection.query(queryCodigoRepublica, [user.PisoCompartido_idPisoCompartido], (err, resultsCodigo) => {
                     if (err) {
@@ -90,7 +79,7 @@ app.post('/login_usuario', (req, res) => {
                             success: true,
                             idUsuarios: user.idUsuarios,
                             PisoCompartido_idPisoCompartido: user.PisoCompartido_idPisoCompartido,
-                            codigo: codigoRepublica,  // Envia o código da república
+                            codigo: codigoRepublica,  
                             message: 'Login bem-sucedido'
                         });
                     } else {
@@ -109,8 +98,6 @@ app.post('/login_usuario', (req, res) => {
 
 app.post('/criar_republica', (req, res) => {
     const { codigo, idUsuarios } = req.body;
-
-    // Verifica se os campos obrigatórios foram fornecidos
     if (!codigo || !idUsuarios) {
         return res.status(400).json({ success: false, message: 'Código e idUsuarios são obrigatórios.' });
     }
@@ -183,32 +170,22 @@ app.post('/entrar_republica', (req, res) => {
 });
 
 app.get('/getBulletinCard', (req, res) => {
-    const { PisoCompartido_idPisoCompartido } = req.query; // Obtém o PisoCompartido_idPisoCompartido da query string
-
-    // Verifica se o PisoCompartido_idPisoCompartido foi fornecido
+    const { PisoCompartido_idPisoCompartido } = req.query; 
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
-
-    // Consulta os dados do boletim
     const query = 'SELECT informaciones FROM MuroAnuncios WHERE PisoCompartido_idPisoCompartido = ?';
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao obter boletins:', err);
             return res.status(500).json({ success: false, message: 'Erro ao obter boletins.' });
         }
-
-        // Verifica se existem registros para o PisoCompartido_idPisoCompartido fornecido
         if (results.length === 0) {
             return res.status(404).json({ success: false, message: 'Nenhum boletim encontrado para o Piso Compartido.' });
         }
-
-        // Retorna os resultados diretamente como um array
         const boletins = results.map(item => ({
             informaciones: item.informaciones
         }));
-
-        // Retorna o array de boletins diretamente
         res.status(200).json(boletins);
     });
 });
