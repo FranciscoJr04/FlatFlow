@@ -272,7 +272,7 @@ app.get('/getBillCard', (req, res) => {
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
-    const query = 'SELECT bill_info FROM RegistroCuentas WHERE PisoCompartido_idPisoCompartido = ?';
+    const query = 'SELECT valor, diaVencimiento, compra FROM RegistroCuentas WHERE PisoCompartido_idPisoCompartido = ?';
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao obter faturas:', err);
