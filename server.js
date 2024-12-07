@@ -386,7 +386,7 @@ app.delete('/deleteCleaningCard', (req, res) => {
     if (!quehacer || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ message: 'quehacer e PisoCompartido_idPisoCompartido são obrigatórios.' });
     }
-    const query = 'DELETE FROM Calendario WHERE quehacer = ? AND PisoCompartido_idPisoCompartido = ?';
+    const query = 'DELETE FROM CalendarioQueHaceres WHERE quehacer = ? AND PisoCompartido_idPisoCompartido = ?';
     connection.query(query, [quehacer, PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao deletar evento de calendário:', err);
