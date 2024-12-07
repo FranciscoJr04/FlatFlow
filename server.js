@@ -76,7 +76,8 @@ app.post('/login_usuario', (req, res) => {
         if (results.length > 0) {
             const user = results[0];
             if (user.contraseña === contraseña) {
-                return res.status(200).json({success: true, idUsuarios: user.idUsuarios, PisoCompartido_idPisoCompartido: user.PisoCompartido_idPisoCompartido, message: 'Login bem-sucedido'});
+                const query_codigo = 'SELECT codigo FROM Usuario WHERE email = ?';
+                return res.status(200).json({success: true, idUsuarios: user.idUsuarios, PisoCompartido_idPisoCompartido: user.PisoCompartido_idPisoCompartido, codigo: query_codigo , message: 'Login bem-sucedido'});
             } else {
                 return res.status(400).send('Senha incorreta');
             }
