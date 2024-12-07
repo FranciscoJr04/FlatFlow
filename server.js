@@ -109,16 +109,17 @@ app.post('/login_usuario', (req, res) => {
 
 app.post('/criar_republica', (req, res) => {
     const { codigo, idUsuarios } = req.body;
+
+    // Verifica se os campos obrigatórios foram fornecidos
     if (!codigo || !idUsuarios) {
         return res.status(400).json({ success: false, message: 'Código e idUsuarios são obrigatórios.' });
     }
-    connection.query('SELECT COUNT(*) AS count FROM PisoCompartido', (err, results) => {
+    connection.query('SELECT MAX(idPisoCompartido) AS maxId FROM PisoCompartido', (err, results) => {
         if (err) {
-            console.error('Erro ao contar repúblicas:', err);
-            return res.status(500).json({ success: false, message: 'Erro ao contar repúblicas' });
+            console.error('Erro ao buscar o maior idPisoCompartido:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao buscar o maior idPisoCompartido' });
         }
-
-        const newIdRepublica = results[0].count + 1;
+        const newIdRepublica = results[0].maxId + 1;
         const query = 'INSERT INTO PisoCompartido (idPisoCompartido, codigo, cantidadMiembros) VALUES (?, ?, ?)';
         connection.query(query, [newIdRepublica, codigo, 1], (err, result) => {
             if (err) {
@@ -140,6 +141,7 @@ app.post('/criar_republica', (req, res) => {
         });
     });
 });
+
 
 app.post('/entrar_republica', (req, res) => {
     const { codigo, idUsuarios } = req.body;
@@ -217,13 +219,13 @@ app.post('/createBulletinCard', (req, res) => {
     if (!informaciones || !Usuario_idUsuarios || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'informaciones, Usuario_idUsuarios e PisoCompartido_idPisoCompartido são obrigatórios.' });
     }
-    const countQuery = 'SELECT COUNT(*) AS count FROM MuroAnuncios';
+    const countQuery = 'SELECT MAX(idMuro) AS maxId FROM MuroAnuncios';
     connection.query(countQuery, (err, results) => {
         if (err) {
-            console.error('Erro ao contar anúncios:', err);
-            return res.status(500).json({ success: false, message: 'Erro ao contar anúncios.' });
+            console.error('Erro ao buscar o maior idMuro:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao buscar o maior idMuro.' });
         }
-        const nextIdMuro = results[0].count + 1;
+        const nextIdMuro = results[0].maxId + 1;
         const insertQuery = `
             INSERT INTO MuroAnuncios (idMuro, informaciones, Usuario_idUsuarios, PisoCompartido_idPisoCompartido)
             VALUES (?, ?, ?, ?)
@@ -247,14 +249,18 @@ app.post('/createBillCard', (req, res) => {
     if (!valor || !diaVencimiento || !compra || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'Todos os campos são obrigatórios.' });
     }
-    connection.query('SELECT COUNT(*) AS count FROM RegistroCuentas', (err, results) => {
+    const countQuery = 'SELECT MAX(idCuenta) AS maxId FROM RegistroCuentas';
+    connection.query(countQuery, (err, results) => {
         if (err) {
-            console.error('Erro ao contar faturas:', err);
-            return res.status(500).json({ success: false, message: 'Erro ao contar faturas.' });
+            console.error('Erro ao buscar o maior idCuenta:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao buscar o maior idCuenta.' });
         }
-        const IdCuenta = results[0].count + 1;
-        const query = 'INSERT INTO RegistroCuentas (idCuenta, valor, diaVencimiento, compra, PisoCompartido_idPisoCompartido) VALUES (?, ?, ?, ?, ?)';
-        connection.query(query, [IdCuenta, valor, diaVencimiento, compra, PisoCompartido_idPisoCompartido], (err, result) => {
+        const newIdCuenta = results[0].maxId + 1;
+        const insertQuery = `
+            INSERT INTO RegistroCuentas (idCuenta, valor, diaVencimiento, compra, PisoCompartido_idPisoCompartido)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        connection.query(insertQuery, [newIdCuenta, valor, diaVencimiento, compra, PisoCompartido_idPisoCompartido], (err) => {
             if (err) {
                 console.error('Erro ao criar fatura:', err);
                 return res.status(500).json({ success: false, message: 'Erro ao criar fatura.' });
@@ -267,35 +273,26 @@ app.post('/createBillCard', (req, res) => {
     });
 });
 
-app.get('/getBillCard', (req, res) => {
-    const { PisoCompartido_idPisoCompartido } = req.query; // Obtém o PisoCompartido_idPisoCompartido da query string
 
-    // Verifica se o PisoCompartido_idPisoCompartido foi fornecido
+app.get('/getBillCard', (req, res) => {
+    const { PisoCompartido_idPisoCompartido } = req.query; 
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
-
-    // Consulta os valores, diaVencimiento, e compra associados ao PisoCompartido_idPisoCompartido
     const query = 'SELECT valor, diaVencimiento, compra FROM RegistroCuentas WHERE PisoCompartido_idPisoCompartido = ?';
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao obter faturas:', err);
             return res.status(500).json({ success: false, message: 'Erro ao obter faturas.' });
         }
-
-        // Verifica se existem registros para o PisoCompartido_idPisoCompartido fornecido
         if (results.length === 0) {
             return res.status(404).json({ success: false, message: 'Nenhuma fatura encontrada para o Piso Compartido.' });
         }
-
-        // Mapeia os resultados para retornar os campos desejados
         const bills = results.map(item => ({
             valor: item.valor,
             diaVencimiento: item.diaVencimiento,
             compra: item.compra
         }));
-
-        // Retorna a resposta com as faturas
         res.status(200).json(bills);
     });
 });
@@ -324,73 +321,48 @@ app.delete('/deleteBillCard', (req, res) => {
     });
 });
 
-
-
-// Rota para obter o calendário (quehaceres) de um Piso Compartido específico
 app.get('/getCleaningCard', (req, res) => {
-    const { PisoCompartido_idPisoCompartido } = req.query; // Obtém o PisoCompartido_idPisoCompartido da query string
-
-    // Verifica se o PisoCompartido_idPisoCompartido foi fornecido
+    const { PisoCompartido_idPisoCompartido } = req.query;
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
-
-    // Consulta os quehaceres e diaVencimiento associados ao PisoCompartido_idPisoCompartido
     const query = 'SELECT quehacer, diaVencimiento FROM CalendarioQuehaceres WHERE PisoCompartido_idPisoCompartido = ?';
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao obter o calendário:', err);
             return res.status(500).json({ success: false, message: 'Erro ao obter o calendário.' });
         }
-
-        // Verifica se existem registros para o PisoCompartido_idPisoCompartido fornecido
         if (results.length === 0) {
             return res.status(404).json({ success: false, message: 'Nenhum calendário encontrado para o Piso Compartido.' });
         }
-
-        // Retorna os quehaceres e diaVencimiento diretamente
         const calendario = results.map(item => ({
             quehacer: item.quehacer,
             diaVencimiento: item.diaVencimiento
         }));
-
-        // Retorna o array de quehaceres diretamente
         res.status(200).json(calendario);
     });
 });
 
-
-// Rota para criar um novo "calendario"
 app.post('/createCleaningCard', (req, res) => {
     const { quehacer, diaVencimiento, Usuario_idUsuarios, PisoCompartido_idPisoCompartido } = req.body;
-
-    // Verifica se todos os campos necessários foram fornecidos
     if (!quehacer || !diaVencimiento || !Usuario_idUsuarios || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'Todos os campos são obrigatórios.' });
     }
-
-    // Obter a quantidade de registros para determinar o próximo idCalendario
-    connection.query('SELECT COUNT(*) AS count FROM CalendarioQuehaceres', (err, results) => {
+    connection.query('SELECT MAX(idCalendario) AS maxId FROM CalendarioQuehaceres', (err, results) => {
         if (err) {
-            console.error('Erro ao contar os registros do calendário:', err);
-            return res.status(500).json({ success: false, message: 'Erro ao contar os registros do calendário.' });
+            console.error('Erro ao buscar o maior idCalendario:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao buscar o maior idCalendario.' });
         }
-
-        const newIdCalendario = results[0].count + 1;
-
-        // Inserir um novo registro na tabela calendario_quehaceres
+        const newIdCalendario = results[0].maxId + 1;
         const query = `
-            INSERT INTO CalendarioQuehaceres (idCalendario, quehacer, diaVencimiento, Usuario_idUsuarios, PisoCompartido_idPisoCompartido) 
+            INSERT INTO CalendarioQuehaceres (idCalendario, quehacer, diaVencimiento, Usuario_idUsuarios, PisoCompartido_idPisoCompartido)
             VALUES (?, ?, ?, ?, ?)
         `;
-        
         connection.query(query, [newIdCalendario, quehacer, diaVencimiento, Usuario_idUsuarios, PisoCompartido_idPisoCompartido], (err, result) => {
             if (err) {
                 console.error('Erro ao inserir o novo calendário:', err);
                 return res.status(500).json({ success: false, message: 'Erro ao criar o calendário.' });
             }
-
-            // Retorna sucesso
             res.status(201).json({
                 success: true,
                 message: 'Calendário criado com sucesso'
@@ -399,30 +371,20 @@ app.post('/createCleaningCard', (req, res) => {
     });
 });
 
-// Rota para deletar um evento de calendário com base no quehacer e PisoCompartido_idPisoCompartido
 app.delete('/deleteCleaningCard', (req, res) => {
-    const { quehacer, PisoCompartido_idPisoCompartido } = req.body;  // Espera os parâmetros no corpo da requisição
-
-    // Verificar se o quehacer e PisoCompartido_idPisoCompartido foram fornecidos
+    const { quehacer, PisoCompartido_idPisoCompartido } = req.body; 
     if (!quehacer || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ message: 'quehacer e PisoCompartido_idPisoCompartido são obrigatórios.' });
     }
-
-    // Query para deletar o evento de calendário com base no quehacer e PisoCompartido_idPisoCompartido
     const query = 'DELETE FROM Calendario WHERE quehacer = ? AND PisoCompartido_idPisoCompartido = ?';
-
     connection.query(query, [quehacer, PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao deletar evento de calendário:', err);
             return res.status(500).json({ message: 'Erro ao tentar deletar evento de calendário.' });
         }
-
-        // Verificar se algum evento foi deletado
         if (results.affectedRows === 0) {
             return res.status(404).json({ message: 'Evento de calendário não encontrado.' });
         }
-
-        // Retornar sucesso
         res.status(200).json({
             success: true,
             message: 'Evento de calendário deletado com sucesso.'
