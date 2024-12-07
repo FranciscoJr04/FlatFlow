@@ -181,16 +181,33 @@ app.post('/entrar_republica', (req, res) => {
 });
 
 app.get('/getBulletinCard', (req, res) => {
-    const { PisoCompartido_idPisoCompartido } = req.query;
+    const { PisoCompartido_idPisoCompartido } = req.query; // Obtém o PisoCompartido_idPisoCompartido da query string
+
+    // Verifica se o PisoCompartido_idPisoCompartido foi fornecido
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
-    const query = 'SELECT informaciones FROM MuroAnuncios WHERE PisoCompartido_idPisoCompartido = ?';
+
+    // Consulta os dados do boletim
+    const query = 'SELECT informaciones FROM BulletinCard WHERE PisoCompartido_idPisoCompartido = ?';
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
-            return res.status(500).json({ success: false, message: 'Erro ao consultar anúncios.' });
+            console.error('Erro ao obter boletins:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao obter boletins.' });
         }
-        res.json({results});
+
+        // Verifica se existem registros para o PisoCompartido_idPisoCompartido fornecido
+        if (results.length === 0) {
+            return res.status(404).json({ success: false, message: 'Nenhum boletim encontrado para o Piso Compartido.' });
+        }
+
+        // Retorna os resultados diretamente como um array
+        const boletins = results.map(item => ({
+            informaciones: item.informaciones
+        }));
+
+        // Retorna o array de boletins diretamente
+        res.status(200).json(boletins);
     });
 });
 
