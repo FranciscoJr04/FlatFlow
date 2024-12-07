@@ -1,7 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
 const app = express();
-const port = 3000;
+const port = 3306;
 const bcrypt = require('bcryptjs'); // Pacote para hashing de senhas (caso queira adicionar mais segurança)
 
 // Middleware para parsing do JSON
