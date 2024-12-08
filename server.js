@@ -221,7 +221,7 @@ app.post('/createBulletinCard', (req, res) => {
 });
 
 app.delete('/deleteBulletinCard', (req, res) => {
-    const { informaciones, PisoCompartido_idPisoCompartido } = req.body;
+    const { informaciones, PisoCompartido_idPisoCompartido } = req.query;
     if (!informaciones || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({
             success: false,
@@ -315,7 +315,7 @@ app.get('/getBillCard', (req, res) => {
 
 
 app.delete('/deleteBillCard', (req, res) => {
-    const { compra, PisoCompartido_idPisoCompartido } = req.body;
+    const { compra, PisoCompartido_idPisoCompartido } = req.query;
     if (!compra || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ message: 'Parâmetros incompletos. Informe compra e PisoCompartido_idPisoCompartido.' });
     }
@@ -390,7 +390,7 @@ app.post('/createCleaningCard', (req, res) => {
 });
 
 app.delete('/deleteCleaningCard', (req, res) => {
-    const { quehacer, PisoCompartido_idPisoCompartido } = req.body; 
+    const { quehacer, PisoCompartido_idPisoCompartido } = req.query; 
     if (!quehacer || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ message: 'quehacer e PisoCompartido_idPisoCompartido são obrigatórios.' });
     }
