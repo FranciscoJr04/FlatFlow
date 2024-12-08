@@ -289,7 +289,11 @@ app.get('/getBillCard', (req, res) => {
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
-    const query = 'SELECT valor, diaVencimiento, compra FROM RegistroCuentas WHERE PisoCompartido_idPisoCompartido = ?';
+    const query = `
+        SELECT valor, diaVencimiento, compra 
+        FROM RegistroCuentas 
+        WHERE PisoCompartido_idPisoCompartido = ?
+    `;
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao obter faturas:', err);
@@ -300,12 +304,14 @@ app.get('/getBillCard', (req, res) => {
         }
         const bills = results.map(item => ({
             valor: item.valor,
-            diaVencimiento: item.diaVencimiento,
+            diaVencimiento: item.diaVencimiento.toISOString().split('T')[0], 
             compra: item.compra
         }));
+
         res.status(200).json(bills);
     });
 });
+
 
 
 app.delete('/deleteBillCard', (req, res) => {
@@ -336,22 +342,24 @@ app.get('/getCleaningCard', (req, res) => {
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
-    const query = 'SELECT quehacer, diaVencimiento FROM CalendarioQuehaceres WHERE PisoCompartido_idPisoCompartido = ?';
+    const query = `
+        SELECT quehacer, diaVencimiento 
+        FROM CalendarioQuehaceres 
+        WHERE PisoCompartido_idPisoCompartido = ?
+    `;
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
-            console.error('Erro ao obter o calendário:', err);
-            return res.status(500).json({ success: false, message: 'Erro ao obter o calendário.' });
+            console.error('Erro ao obter registros:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao obter registros.' });
         }
-        if (results.length === 0) {
-            return res.status(404).json({ success: false, message: 'Nenhum calendário encontrado para o Piso Compartido.' });
-        }
-        const calendario = results.map(item => ({
+        const formattedResults = results.map(item => ({
             quehacer: item.quehacer,
-            diaVencimiento: item.diaVencimiento
+            diaVencimiento: item.diaVencimiento.toISOString().split('T')[0] 
         }));
-        res.status(200).json(calendario);
+        res.status(200).json(formattedResults);
     });
 });
+
 
 app.post('/createCleaningCard', (req, res) => {
     const { quehacer, diaVencimiento, Usuario_idUsuarios, PisoCompartido_idPisoCompartido } = req.body;
