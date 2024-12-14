@@ -363,7 +363,7 @@ app.get('/getBillCard', (req, res) => {
             valor: item.valor,
             diaVencimiento: item.diaVencimiento.toISOString().split('T')[0], 
             compra: item.compra,
-            idCuenta: idCuenta
+            idCuenta: item.idCuenta
         }));
 
         res.status(200).json(bills);
@@ -413,7 +413,7 @@ app.get('/getCleaningCard', (req, res) => {
         const formattedResults = results.map(item => ({
             quehacer: item.quehacer,
             diaVencimiento: item.diaVencimiento.toISOString().split('T')[0],
-            idCalendario: idCalendario
+            idCalendario: item.idCalendario
         }));
         res.status(200).json(formattedResults);
     });
