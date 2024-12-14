@@ -226,8 +226,8 @@ app.get('/getBulletinCard', (req, res) => {
                     if (usuarioResults.length > 0) {
                         boletins.push({
                             informaciones: item.informaciones,
-                            idMuro: item.idMuro,
-                            nombre: usuarioResults[0].nombre
+                            nombre: usuarioResults[0].nombre,
+                            idMuro: item.idMuro
                         });
                     }
                     resolve();
