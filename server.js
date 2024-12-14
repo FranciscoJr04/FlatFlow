@@ -72,8 +72,81 @@ app.post('/criar_usuario', (req, res) => {
             if (err) {
                 console.error('Erro ao inserir usuário:', err);
                 return res.status(500).json({ success: false, message: 'Erro ao inserir usuário' });
-            }
+            } 
             res.status(201).json({success: true, message: 'Usuário criado com sucesso'});
+        });
+    });
+});
+app.post('/quitRepublic', (req, res) => {
+    const { idUsuarios, PisoCompartido_idPisoCompartido } = req.body;
+
+    // Verificar se os parâmetros obrigatórios foram enviados
+    if (!idUsuarios || !PisoCompartido_idPisoCompartido) {
+        return res.status(400).json({ success: false, message: 'idUsuarios e PisoCompartido_idPisoCompartido são obrigatórios.' });
+    }
+
+    // Consulta para decrementar `cantidadMiembros` da república
+    const updateRepublicQuery = `
+        UPDATE PisoCompartido 
+        SET cantidadMiembros = cantidadMiembros - 1 
+        WHERE idPisoCompartido = ? AND cantidadMiembros > 0
+    `;
+
+    // Consulta para atualizar o `PisoCompartido_idPisoCompartido` do usuário
+    const updateUserQuery = `
+        UPDATE Usuario 
+        SET PisoCompartido_idPisoCompartido = 1 
+        WHERE idUsuarios = ?
+    `;
+
+    connection.beginTransaction(err => {
+        if (err) {
+            console.error('Erro ao iniciar transação:', err);
+            return res.status(500).json({ success: false, message: 'Erro ao iniciar a transação.' });
+        }
+
+        // Primeiro, decrementar `cantidadMiembros` da república
+        connection.query(updateRepublicQuery, [PisoCompartido_idPisoCompartido], (err, result) => {
+            if (err) {
+                console.error('Erro ao atualizar quantidadeMiembros:', err);
+                return connection.rollback(() => {
+                    res.status(500).json({ success: false, message: 'Erro ao atualizar quantidadeMiembros.' });
+                });
+            }
+
+            if (result.affectedRows === 0) {
+                return connection.rollback(() => {
+                    res.status(404).json({ success: false, message: 'República não encontrada ou quantidadeMiembros já é zero.' });
+                });
+            }
+
+            // Em seguida, atualizar o `PisoCompartido_idPisoCompartido` do usuário
+            connection.query(updateUserQuery, [idUsuarios], (err, result) => {
+                if (err) {
+                    console.error('Erro ao atualizar PisoCompartido_idPisoCompartido do usuário:', err);
+                    return connection.rollback(() => {
+                        res.status(500).json({ success: false, message: 'Erro ao atualizar o usuário.' });
+                    });
+                }
+
+                if (result.affectedRows === 0) {
+                    return connection.rollback(() => {
+                        res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+                    });
+                }
+
+                // Confirmar transação
+                connection.commit(err => {
+                    if (err) {
+                        console.error('Erro ao confirmar transação:', err);
+                        return connection.rollback(() => {
+                            res.status(500).json({ success: false, message: 'Erro ao confirmar a transação.' });
+                        });
+                    }
+
+                    res.status(200).json({ success: true, message: 'Usuário removido da república com sucesso.' });
+                });
+            });
         });
     });
 });
