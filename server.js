@@ -246,7 +246,7 @@ app.post('/createBulletinCard', (req, res) => {
 
 app.delete('/deleteBulletinCard', (req, res) => {
     const { idMuro, PisoCompartido_idPisoCompartido } = req.query;
-    if (!informaciones || !PisoCompartido_idPisoCompartido) {
+    if (!idMuro || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({
             success: false,
             message: 'Os campos informaciones e PisoCompartido_idPisoCompartido são obrigatórios.'
