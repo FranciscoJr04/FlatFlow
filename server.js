@@ -218,7 +218,7 @@ app.get('/getBulletinCard', (req, res) => {
         const boletins = [];
         const queries = boletinsResults.map(item => {
             return new Promise((resolve, reject) => {
-                const queryUsuario = `SELECT nombre FROM Usuarios WHERE idUsuarios = ?`;
+                const queryUsuario = `SELECT nombre FROM Usuario WHERE idUsuarios = ?`;
                 connection.query(queryUsuario, [item.Usuario_idUsuarios], (err, usuarioResults) => {
                     if (err) {
                         return reject(err);
