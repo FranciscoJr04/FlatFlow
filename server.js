@@ -197,22 +197,55 @@ app.get('/getBulletinCard', (req, res) => {
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
-    const query = 'SELECT informaciones, idMuro FROM MuroAnuncios WHERE PisoCompartido_idPisoCompartido = ?';
-    connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
+
+    const queryBoletins = `
+        SELECT informaciones, idMuro, Usuario_idUsuarios 
+        FROM MuroAnuncios 
+        WHERE PisoCompartido_idPisoCompartido = ?
+    `;
+
+    connection.query(queryBoletins, [PisoCompartido_idPisoCompartido], (err, boletinsResults) => {
         if (err) {
             console.error('Erro ao obter boletins:', err);
             return res.status(500).json({ success: false, message: 'Erro ao obter boletins.' });
         }
-        if (results.length === 0) {
+
+        if (boletinsResults.length === 0) {
             return res.status(404).json({ success: false, message: 'Nenhum boletim encontrado para o Piso Compartido.' });
         }
-        const boletins = results.map(item => ({
-            informaciones: item.informaciones,
-            idMuro: item.idMuro
-        }));
-        res.status(200).json(boletins);
+
+        // Mapear os boletins e buscar os nomes dos usuários
+        const boletins = [];
+        const queries = boletinsResults.map(item => {
+            return new Promise((resolve, reject) => {
+                const queryUsuario = `SELECT nombre FROM Usuarios WHERE idUsuarios = ?`;
+                connection.query(queryUsuario, [item.Usuario_idUsuarios], (err, usuarioResults) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    if (usuarioResults.length > 0) {
+                        boletins.push({
+                            informaciones: item.informaciones,
+                            idMuro: item.idMuro,
+                            nombre: usuarioResults[0].nombre
+                        });
+                    }
+                    resolve();
+                });
+            });
+        });
+
+        Promise.all(queries)
+            .then(() => {
+                res.status(200).json(boletins);
+            })
+            .catch(error => {
+                console.error('Erro ao buscar usuários:', error);
+                res.status(500).json({ success: false, message: 'Erro ao buscar informações dos usuários.' });
+            });
     });
 });
+
 
 
 app.post('/createBulletinCard', (req, res) => {
