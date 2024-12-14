@@ -45,15 +45,13 @@ app.get('/get_membros', (req, res) => {
                 message: 'Nenhum membro encontrado para o Piso Compartido informado.'
             });
         }
-        // Mapeando os resultados para retornar um array com os nomes dos membros
-        const members = results.map(member => member.nombre);
-        res.status(200).json([ // Aqui estamos retornando um array contendo o objeto
-            {
-                members: members
-            }
-        ]);
+        // Mapeando os resultados para retornar um array de objetos onde a chave é "nombre" e o valor é o nome
+        const members = results.map(member => ({ nombre: member.nombre }));
+
+        res.status(200).json(members);
     });
 });
+
 
 
 
