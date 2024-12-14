@@ -28,7 +28,7 @@ app.get('/get_membros', (req, res) => {
     }
     const query = `
         SELECT nombre 
-        FROM Usuarios 
+        FROM Usuario 
         WHERE PisoCompartido_idPisoCompartido = ?
     `;
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
