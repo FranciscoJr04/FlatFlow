@@ -397,12 +397,12 @@ app.post('/createCleaningCard', (req, res) => {
             console.error('Erro ao buscar o maior idCalendario:', err);
             return res.status(500).json({ success: false, message: 'Erro ao buscar o maior idCalendario.' });
         }
-        const newIdCalendario = results[0].maxId + 1;
+        const IdCalendario = results[0].maxId + 1;
         const query = `
             INSERT INTO CalendarioQuehaceres (idCalendario, quehacer, diaVencimiento, Usuario_idUsuarios, PisoCompartido_idPisoCompartido)
             VALUES (?, ?, ?, ?, ?)
         `;
-        connection.query(query, [newIdCalendario, quehacer, diaVencimiento, Usuario_idUsuarios, PisoCompartido_idPisoCompartido], (err, result) => {
+        connection.query(query, [IdCalendario, quehacer, diaVencimiento, Usuario_idUsuarios, PisoCompartido_idPisoCompartido], (err, result) => {
             if (err) {
                 console.error('Erro ao inserir o novo calendário:', err);
                 return res.status(500).json({ success: false, message: 'Erro ao criar o calendário.' });
