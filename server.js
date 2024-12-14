@@ -47,9 +47,11 @@ app.get('/get_membros', (req, res) => {
         }
         // Mapeando os resultados para retornar um array com os nomes dos membros
         const members = results.map(member => member.nombre);
-        res.status(200).json({
-            members
-        });
+        res.status(200).json([ // Aqui estamos retornando um array contendo o objeto
+            {
+                members: members
+            }
+        ]);
     });
 });
 
