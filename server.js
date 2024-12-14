@@ -17,15 +17,38 @@ connection.connect((err) => {
   }
   console.log('Conectado ao banco de dados MySQL');
 });
-app.get('/usuarios', (req, res) => {
-    connection.query('SELECT * FROM Usuario', (err, results) => {
+app.get('/get_membros', (req, res) => {
+    const { PisoCompartido_idPisoCompartido } = req.query;
+
+    if (!PisoCompartido_idPisoCompartido) {
+        return res.status(400).json({
+            success: false,
+            message: 'O parâmetro PisoCompartido_idPisoCompartido é obrigatório.'
+        });
+    }
+    const query = `
+        SELECT nombre 
+        FROM Usuarios 
+        WHERE PisoCompartido_idPisoCompartido = ?
+    `;
+    connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
-            console.error('Erro ao obter usuários:', err);
-            return res.status(500).json({ error: 'Erro ao obter usuários' });
+            console.error('Erro ao buscar membros:', err);
+            return res.status(500).json({
+                success: false,
+                message: 'Erro no servidor ao buscar membros.'
+            });
         }
-        res.json({
-            totalUsuarios: results.length,
-            usuarios: results
+        if (results.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Nenhum membro encontrado para o Piso Compartido informado.'
+            });
+        }
+        const members = results.map(member => member.nome);
+        res.status(200).json({
+            success: true,
+            members
         });
     });
 });
@@ -174,7 +197,7 @@ app.get('/getBulletinCard', (req, res) => {
     if (!PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
-    const query = 'SELECT informaciones FROM MuroAnuncios WHERE PisoCompartido_idPisoCompartido = ?';
+    const query = 'SELECT informaciones, idMuro FROM MuroAnuncios WHERE PisoCompartido_idPisoCompartido = ?';
     connection.query(query, [PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao obter boletins:', err);
@@ -184,7 +207,8 @@ app.get('/getBulletinCard', (req, res) => {
             return res.status(404).json({ success: false, message: 'Nenhum boletim encontrado para o Piso Compartido.' });
         }
         const boletins = results.map(item => ({
-            informaciones: item.informaciones
+            informaciones: item.informaciones,
+            idMuro: item.idMuro
         }));
         res.status(200).json(boletins);
     });
@@ -221,7 +245,7 @@ app.post('/createBulletinCard', (req, res) => {
 });
 
 app.delete('/deleteBulletinCard', (req, res) => {
-    const { informaciones, PisoCompartido_idPisoCompartido } = req.query;
+    const { idMuro, PisoCompartido_idPisoCompartido } = req.query;
     if (!informaciones || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({
             success: false,
@@ -230,9 +254,9 @@ app.delete('/deleteBulletinCard', (req, res) => {
     }
     const query = `
         DELETE FROM MuroAnuncios
-        WHERE informaciones = ? AND PisoCompartido_idPisoCompartido = ?
+        WHERE idMuro = ? AND PisoCompartido_idPisoCompartido = ?
     `;
-    connection.query(query, [informaciones, PisoCompartido_idPisoCompartido], (err, results) => {
+    connection.query(query, [idMuro, PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao deletar o anúncio:', err);
             return res.status(500).json({
@@ -290,7 +314,7 @@ app.get('/getBillCard', (req, res) => {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
     const query = `
-        SELECT valor, diaVencimiento, compra 
+        SELECT valor, diaVencimiento, compra, idCuenta
         FROM RegistroCuentas 
         WHERE PisoCompartido_idPisoCompartido = ?
     `;
@@ -305,7 +329,8 @@ app.get('/getBillCard', (req, res) => {
         const bills = results.map(item => ({
             valor: item.valor,
             diaVencimiento: item.diaVencimiento.toISOString().split('T')[0], 
-            compra: item.compra
+            compra: item.compra,
+            idCuenta: idCuenta
         }));
 
         res.status(200).json(bills);
@@ -315,15 +340,15 @@ app.get('/getBillCard', (req, res) => {
 
 
 app.delete('/deleteBillCard', (req, res) => {
-    const { compra, PisoCompartido_idPisoCompartido } = req.query;
-    if (!compra || !PisoCompartido_idPisoCompartido) {
+    const { idCuenta, PisoCompartido_idPisoCompartido } = req.query;
+    if (!idCuenta || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ message: 'Parâmetros incompletos. Informe compra e PisoCompartido_idPisoCompartido.' });
     }
     const query = `
         DELETE FROM RegistroCuentas 
-        WHERE compra = ? AND PisoCompartido_idPisoCompartido = ?
+        WHERE idCuenta = ? AND PisoCompartido_idPisoCompartido = ?
     `;
-    connection.query(query, [compra, PisoCompartido_idPisoCompartido], (err, results) => {
+    connection.query(query, [idCuenta, PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao deletar conta:', err);
             return res.status(500).json({ message: 'Erro no servidor ao tentar deletar a conta.' });
@@ -343,7 +368,7 @@ app.get('/getCleaningCard', (req, res) => {
         return res.status(400).json({ success: false, message: 'PisoCompartido_idPisoCompartido é obrigatório.' });
     }
     const query = `
-        SELECT quehacer, diaVencimiento 
+        SELECT quehacer, diaVencimiento, idCalendario 
         FROM CalendarioQuehaceres 
         WHERE PisoCompartido_idPisoCompartido = ?
     `;
@@ -354,7 +379,8 @@ app.get('/getCleaningCard', (req, res) => {
         }
         const formattedResults = results.map(item => ({
             quehacer: item.quehacer,
-            diaVencimiento: item.diaVencimiento.toISOString().split('T')[0] 
+            diaVencimiento: item.diaVencimiento.toISOString().split('T')[0],
+            idCalendario: idCalendario
         }));
         res.status(200).json(formattedResults);
     });
@@ -390,12 +416,12 @@ app.post('/createCleaningCard', (req, res) => {
 });
 
 app.delete('/deleteCleaningCard', (req, res) => {
-    const { quehacer, PisoCompartido_idPisoCompartido } = req.query; 
-    if (!quehacer || !PisoCompartido_idPisoCompartido) {
+    const { idCalendario, PisoCompartido_idPisoCompartido } = req.query; 
+    if (!idCalendario || !PisoCompartido_idPisoCompartido) {
         return res.status(400).json({ message: 'quehacer e PisoCompartido_idPisoCompartido são obrigatórios.' });
     }
-    const query = 'DELETE FROM CalendarioQueHaceres WHERE quehacer = ? AND PisoCompartido_idPisoCompartido = ?';
-    connection.query(query, [quehacer, PisoCompartido_idPisoCompartido], (err, results) => {
+    const query = 'DELETE FROM CalendarioQueHaceres WHERE idCalendario = ? AND PisoCompartido_idPisoCompartido = ?';
+    connection.query(query, [idCalendario, PisoCompartido_idPisoCompartido], (err, results) => {
         if (err) {
             console.error('Erro ao deletar evento de calendário:', err);
             return res.status(500).json({ message: 'Erro ao tentar deletar evento de calendário.' });
