@@ -45,7 +45,7 @@ app.get('/get_membros', (req, res) => {
                 message: 'Nenhum membro encontrado para o Piso Compartido informado.'
             });
         }
-        const members = results.map(member => member.nome);
+        const members = results.map(member => member.nombre);
         res.status(200).json({
             success: true,
             members
